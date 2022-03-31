@@ -9,3 +9,6 @@ dictol.egg-info/
 build/
 .vscode
 main.py
+/venv
+/dictol/data/CroppedYale/
+/.idea

@@ -20,15 +20,15 @@ class SRC(base.BaseModel):
 
     def predict(self, Y, iterations=100):
         lasso = Lasso(self.D, self.lamb)
-        lasso.fit(Y, iterations=iterations)
+        lasso.fit(Y, iterations=iterations)  # X = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         X = lasso.coef_
         E = np.zeros((self.num_classes, Y.shape[1]))
         for i in range(self.num_classes):
-            Xi = utils.get_block_row(X, i, self.train_range)
-            Di = utils.get_block_col(self.D, i, self.train_range)
+            Xi = utils.get_block_row(X, i, self.train_range)  # Extract coefficients corresponding to class i
+            Di = utils.get_block_col(self.D, i, self.train_range) # Extract atoms corresponding to class i
             R = Y - np.dot(Di, Xi)
-            E[i, :] = (R*R).sum(axis=0)
-        return utils.vec(np.argmin(E, axis=0) + 1)
+            E[i, :] = (R*R).sum(axis=0)  # Residual function per class
+        return utils.vec(np.argmin(E, axis=0) + 1)  # The estimated class is that associated with the less residual error
 
 
 def mini_test_unit():

@@ -33,9 +33,9 @@ class DLSI(base.BaseModel):
             print('initial loss = %.4f' % self.loss())
 
         for it in range(iterations):
-            # update X
+            # update X (sparse coefficients)
             self._updateX()
-            # update D
+            # update D (dictionary atoms)
             self._updateD()
             if verbose and (it == 0 or (it+1) % show_after == 0):
                 print('iter \t %3d/%d \t loss \t %.4f' % (it + 1, iterations, self.loss()))
@@ -74,7 +74,7 @@ class DLSI(base.BaseModel):
         F = np.dot(self.X[c], self.X[c].T)
         A = np.delete(self.D, list(range(self.D_range[c], self.D_range[c+1])), axis=1).T
 
-        self.D[:, self.D_range[c]:self.D_range[c+1]] = optimize.DLSI_updateD(Dc, E, F, A, self.lambd)
+        self.D[:, self.D_range[c]:self.D_range[c+1]] = optimize.DLSI_updateD(Dc, E, F, A, self.lambd)  # ADMM for convex optimization
 
     def loss(self):
         cost = 0
@@ -91,12 +91,12 @@ class DLSI(base.BaseModel):
         ))
         return cost
 
-    def predict(self, Y):
+    def predict(self, Y, iterations=100):
         E = np.zeros((self.num_classes, Y.shape[1]))
         for c in range(self.num_classes):
             Dc = self._getDc(c)
             lasso = optimize.Lasso(Dc, self.lambd)
-            lasso.fit(Y)
+            lasso.fit(Y, iterations=iterations)
             Xc = lasso.coef_
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)

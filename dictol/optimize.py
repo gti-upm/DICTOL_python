@@ -259,7 +259,7 @@ class Fista(object):
 class Lasso(Fista):
     """
     Solving a Lasso optimization problem using FISTA
-    `X, = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
+    `X = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         = argmin_X f(X) + lambd||X||_1
         F(x) = f(X) + lamb||X||_1
     """

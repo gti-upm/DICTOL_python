@@ -1,0 +1,2 @@
+import dictol
+dictol.demo()

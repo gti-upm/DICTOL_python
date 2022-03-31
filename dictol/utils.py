@@ -30,12 +30,12 @@ def label_to_range(label):
     -----------
     label: list of integers
         must be in the form of [1, 1, ..., 1, 2, 2, ..., 2, ..., C, C, ..., C]
-        i.e. nondecreasing numbers starting from 1, each element is greater
+        i.e. non-decreasing numbers starting from 1, each element is greater
         than the previous element by at most 1
 
     Returns:
     --------
-    a list of intergers with C + 1 elements, start with 0
+    a list of integers with C + 1 elements, start with 0
     the i-th element is number of elements in label that equals to i
         
     """
@@ -296,9 +296,9 @@ def load_mat(filename):
 
 def picl_train_test(dataset, N_train_c):
     data_fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
-    vars_dict = load_mat(data_fn)
+    vars_dict = load_mat(data_fn) # Load data from a matfile file
     Y = vars_dict['Y']
-    d = Y.shape[0]
+    d = Y.shape[0]  # Size of feature vectors computed from images.
     if 'Y_range' not in vars_dict:
         Y_range = label_to_range(vars_dict['label'].flatten(1)).astype(int)
 
