@@ -18,10 +18,15 @@ class SRC(base.BaseModel):
         self.train_range = utils.label_to_range(label_train)
         self.num_classes = len(self.train_range) - 1
 
-    def predict(self, Y, iterations=100):
+    def predict(self, Y, iterations=100, mean_spars=False):
         lasso = Lasso(self.D, self.lamb)
         lasso.fit(Y, iterations=iterations)  # X = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         X = lasso.coef_
+        if mean_spars:
+            mean_sparsity = np.mean(np.sum(X >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
+            std_sparsity = np.std(np.sum(X >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
+            print(f'Mean sparsity: {mean_sparsity}')
+            print(f'Std sparsity: {std_sparsity}')
         E = np.zeros((self.num_classes, Y.shape[1]))
         for i in range(self.num_classes):
             Xi = utils.get_block_row(X, i, self.train_range)  # Extract coefficients corresponding to class i
@@ -36,7 +41,7 @@ def mini_test_unit():
     print('Mini Unit test: Sparse Representation-based Classification (SRC)')
     dataset = 'myYaleB'
     N_train = 2
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     src = SRC(lamb=0.01)
     src.fit(Y_train, label_train)
     src.evaluate(Y_test, label_test)
@@ -47,7 +52,7 @@ def test_unit():
     print('Unit test: Sparse Representation-based Classification (SRC)')
     dataset = 'myYaleB'
     N_train = 15
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     src = SRC(lamb=0.01)
     src.fit(Y_train, label_train)
     src.evaluate(Y_test, label_test)

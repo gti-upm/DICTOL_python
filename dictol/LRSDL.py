@@ -277,7 +277,7 @@ def mini_test_unit():
     print('Mini Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 5
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=5)
     lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
     lrsdl.evaluate(Y_test, label_test)
@@ -288,7 +288,7 @@ def mini_test_unit_FDDL():
     print('Mini Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 5
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=4, k0=0)
     lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
     lrsdl.evaluate(Y_test, label_test)
@@ -299,7 +299,7 @@ def test_unit_FDDL():
     print('Unit test: Fisher Disrciminant Dicationary Learning')
     dataset = 'myYaleB'
     N_train = 30
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=0)
     lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
     lrsdl.evaluate(Y_test, label_test)
@@ -310,7 +310,7 @@ def test_unit():
     print('Unit test: Low-rank shared Dictionary Learning')
     dataset = 'myYaleB'
     N_train = 30
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     lrsdl = LRSDL(lambd=0.01, lambd2=0.01, eta=0.1, k=20, k0=10)
     lrsdl.fit(Y_train, label_train, iterations=30, verbose=True)
     lrsdl.evaluate(Y_test, label_test)

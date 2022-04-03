@@ -39,7 +39,7 @@ print(f'Atoms in dictionary: {src.D.shape[1]}')
 # Image Classification using SRC on test data
 print('\n Classification ================================================================')
 start = time.time()
-pred = src.predict(Y_test, iterations=100)
+pred = src.predict(Y_test, iterations=100, mean_spars=True)
 end = time.time()
 print(f'Elapse time for prediction(s): {end - start}')
 acc = np.sum(pred == label_test) / float(len(label_test))

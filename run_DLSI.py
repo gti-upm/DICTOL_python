@@ -34,7 +34,7 @@ print(f'Class ids: {set(label_train)}')
 # lamda: Sparsity regularizer in the underlying lasso minimization problem.
 # k: number of atoms per class in the dictionary
 print('\n Dictionary learning ================================================================')
-dlsi = DLSI.DLSI(k=10, lambd=0.001, eta=0.001)
+dlsi = DLSI.DLSI(k=16, lambd=0.001, eta=0.001)
 start = time.time()
 dlsi.fit(Y_train, label_train, iterations=100, verbose=True)
 end = time.time()
@@ -46,7 +46,7 @@ print(f'Atoms in dictionary: {dlsi.D.shape[1]}')
 # Image Classification using SRC on test data
 print('\n Classification ================================================================')
 start = time.time()
-pred = dlsi.predict(Y_test, iterations=100)
+pred = dlsi.predict(Y_test, iterations=100, mean_spars=True)
 end = time.time()
 print(f'Elapse time for prediction(s): {end - start}')
 acc = np.sum(pred == label_test) / float(len(label_test))

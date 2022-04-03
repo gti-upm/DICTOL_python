@@ -91,15 +91,24 @@ class DLSI(base.BaseModel):
         ))
         return cost
 
-    def predict(self, Y, iterations=100):
+    def predict(self, Y, iterations=100, mean_spars=False):
         E = np.zeros((self.num_classes, Y.shape[1]))
+        sparsity = np.zeros((self.num_classes, Y.shape[1]))
         for c in range(self.num_classes):
             Dc = self._getDc(c)
             lasso = optimize.Lasso(Dc, self.lambd)
             lasso.fit(Y, iterations=iterations)
             Xc = lasso.coef_
+            if mean_spars:
+                sparsity[c, :] = np.sum(Xc >= 1 / (self.D.shape[1] / self.num_classes), axis=0)
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)
+
+        if mean_spars:
+            mean_sparsity = np.mean(np.sum(sparsity, axis=0))
+            std_sparsity = np.std(np.sum(sparsity, axis=0))
+            print(f'Mean sparsity: {mean_sparsity}')
+            print(f'Std sparsity: {std_sparsity}')
         return np.argmin(E, axis=0) + 1
 
 
@@ -111,7 +120,7 @@ def mini_test_unit():
     print('Mini Unit test: DLSI')
     dataset = 'myYaleB'
     N_train = 5
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     clf = DLSI(k=3, lambd=0.001, eta=0.001)
     clf.fit(Y_train, label_train, iterations=10, verbose=True)
     clf.evaluate(Y_test, label_test)
@@ -122,7 +131,7 @@ def test_unit():
     print('Unit test: DLSI')
     dataset = 'myYaleB'
     N_train = 15
-    Y_train, Y_test, label_train, label_test = utils.train_test_split(dataset, N_train)
+    Y_train, Y_test, label_train, label_test, *other = utils.train_test_split(dataset, N_train)
     clf = DLSI(k=10, lambd=0.001, eta=0.001)
     clf.fit(Y_train, label_train, iterations=100, verbose=True)
     clf.evaluate(Y_test, label_test)
