@@ -1,0 +1,7 @@
+*.gz
+*.npy
+*.npz
+*.swp
+*.pickle
+.notifier
+__pycache__

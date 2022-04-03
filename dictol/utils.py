@@ -6,6 +6,12 @@ import numpy as np
 import numpy.linalg as LA
 import scipy.io as sio
 import pkg_resources
+from skimage.io import imread
+from skimage import io
+from matplotlib import pyplot as plt
+import rff.rfflearn.cpu as rfflearn
+from sklearn import preprocessing
+import pickle
 
 
 def repmat(A, rows, cols):
@@ -42,16 +48,16 @@ def label_to_range(label):
     res = [0]
     assert label[0] == 1, 'label must start with 1'
     for i in range(1, len(label)):
-        if label[i] == label[i-1]:
+        if label[i] == label[i - 1]:
             continue
-        if label[i] == label[i-1] + 1:
+        if label[i] == label[i - 1] + 1:
             res.append(i)
         else:
-            assert False,\
+            assert False, \
                 ('label[{}] and label[{}] must be equal or two consecutive '
                  'integers, got {} and {}').format(
-                     i-1, i, label[i-1], label[i]
-                 )
+                    i - 1, i, label[i - 1], label[i]
+                )
     res.append(len(label))
     return res
 
@@ -73,13 +79,13 @@ def range_to_label(a_range):
     assert a_range[0] == 0, 'input must start with 0'
     res = []
     for i in range(1, len(a_range)):
-        assert a_range[i] > a_range[i-1],\
+        assert a_range[i] > a_range[i - 1], \
             ('a_range must be an increasing list, '
              'got a_range[{}] = {} < a_range[{}] = {}').format(
-                 i, a_range[i], i - 1, a_range[i-1]
-             )
+                i, a_range[i], i - 1, a_range[i - 1]
+            )
 
-        res.extend([i]*(a_range[i] - a_range[i-1]))
+        res.extend([i] * (a_range[i] - a_range[i - 1]))
     return res
 
 
@@ -108,7 +114,7 @@ def get_block_row(matrix, block_indices, row_range):
     # if isinstance(block_indices, (list, np.ndarray, np.generic))
     ids = []
     for i in block_indices:
-        ids = ids + list(range(row_range[i], row_range[i+1]))
+        ids = ids + list(range(row_range[i], row_range[i + 1]))
     return matrix[ids, :].copy()
 
 
@@ -152,8 +158,8 @@ def get_block(matrix, i, j, row_range, col_range):
     row_range: row range
     col_range: columns range
     """
-    return matrix[row_range[i]:row_range[i+1],
-                  col_range[j]: col_range[j+1]].copy()
+    return matrix[row_range[i]:row_range[i + 1],
+           col_range[j]: col_range[j + 1]].copy()
 
 
 def norm1(X):
@@ -161,7 +167,7 @@ def norm1(X):
     Return norm 1 of a matrix, which is sum of the absolute value of all elements
     of that matrix.
     """
-    if X.shape[0]*X.shape[1] == 0:
+    if X.shape[0] * X.shape[1] == 0:
         return 0
     return abs(X).sum()
 
@@ -171,16 +177,16 @@ def normF2(X):
     Return square of the Frobenius norm, which is sum of square of all
     elements in a matrix
     """
-    if X.shape[0]*X.shape[1] == 0:
+    if X.shape[0] * X.shape[1] == 0:
         return 0
-    return LA.norm(X, 'fro')**2
+    return LA.norm(X, 'fro') ** 2
 
 
 def normc(A):
     """
     normalize each column of A to have norm2 = 1
     """
-    return A / np.tile(np.sqrt(np.sum(A*A, axis=0)), (A.shape[0], 1))
+    return A / np.tile(np.sqrt(np.sum(A * A, axis=0)), (A.shape[0], 1))
 
 
 def nuclearnorm(X):
@@ -242,7 +248,7 @@ class MyForm:
         """
         A = np.dot(self.M, other.M)
         B = np.dot(self.M, other.N) + np.dot(self.N, other.M) + \
-            self.k*np.dot(self.N, other.N)
+            self.k * np.dot(self.N, other.N)
         return MyForm(A, B, self.k)
 
     def inv(self):
@@ -250,7 +256,7 @@ class MyForm:
         compute inverse matrix
         """
         A = LA.inv(self.M)
-        B = - np.dot(LA.inv(self.M + self.k*self.N), np.dot(self.N, A))
+        B = - np.dot(LA.inv(self.M + self.k * self.N), np.dot(self.N, A))
         return MyForm(A, B, self.k)
 
     def mult_vec(self, x):
@@ -285,8 +291,8 @@ def pickDfromY(Y, Y_range, D_range):
         N_c = Yc.shape[1]
         # print Yc
         ids = randperm(N_c)
-        kc = D_range[c+1] - D_range[c]
-        D[:, D_range[c]:D_range[c+1]] = Yc[:, np.sort(ids[:kc])]
+        kc = D_range[c + 1] - D_range[c]
+        D[:, D_range[c]:D_range[c + 1]] = Yc[:, np.sort(ids[:kc])]
     return D
 
 
@@ -295,8 +301,8 @@ def load_mat(filename):
 
 
 def picl_train_test(dataset, N_train_c):
-    data_fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
-    vars_dict = load_mat(data_fn) # Load data from a matfile file
+    data_fn = pkg_resources.resource_filename('dictol', 'data/' + dataset + '.mat')
+    vars_dict = load_mat(data_fn)  # Load data from a matfile file
     Y = vars_dict['Y']
     d = Y.shape[0]  # Size of feature vectors computed from images.
     if 'Y_range' not in vars_dict:
@@ -306,22 +312,22 @@ def picl_train_test(dataset, N_train_c):
         Y_range = vars_dict['Y_range'].flatten(1).astype(int)
 
     C = Y_range.size - 1
-    N_total     = Y_range[-1]
-    N_train     = C*N_train_c
-    N_test      = N_total - N_train
+    N_total = Y_range[-1]
+    N_train = C * N_train_c
+    N_test = N_total - N_train
 
-    Y_train     = np.zeros((d, N_train))
-    Y_test      = np.zeros((d, N_test))
-    label_train = [0]*N_train
-    label_test = [0]*N_test
-    cur_train   = 0
-    cur_test    = 0
+    Y_train = np.zeros((d, N_train))
+    Y_test = np.zeros((d, N_test))
+    label_train = [0] * N_train
+    label_test = [0] * N_test
+    cur_train = 0
+    cur_test = 0
     for c in range(C):
-        Yc        = get_block_col(Y, c, Y_range)
+        Yc = get_block_col(Y, c, Y_range)
         N_total_c = Yc.shape[1]
-        N_test_c  = N_total_c - N_train_c
-        label_train[cur_train: cur_train + N_train_c] = [c+1]*N_train_c
-        label_test[cur_test:cur_test + N_test_c] = [c+1]*N_test_c
+        N_test_c = N_total_c - N_train_c
+        label_train[cur_train: cur_train + N_train_c] = [c + 1] * N_train_c
+        label_test[cur_test:cur_test + N_test_c] = [c + 1] * N_test_c
 
         ids = randperm(N_total_c)
 
@@ -335,16 +341,108 @@ def picl_train_test(dataset, N_train_c):
         cur_test += N_test_c
 
     Y_train = normc(Y_train)
-    Y_test  = normc(Y_test)
+    Y_test = normc(Y_test)
     return (Y_train, label_train, Y_test, label_test)
+
+
+def load_CroppedYale_train_test(N_train_c, dim_feat=504, precomputed=False):
+    # Arguments
+    # - N_train_c: number of training images per class to learn/build dictionary.
+    # Read images from database and generate feature vectors
+    pickle_file = 'dictol/data/CroppedYale/CroppedYale.pickle'
+    if precomputed and os.path.isfile(pickle_file):
+        print(f'Loading pre-computed rff features. Delete pickle files inside /CroppedYale folder to recompute')
+        # Load pickle files
+        pickled_file = open(pickle_file, 'rb')
+        Y_train = pickle.load(pickled_file)
+        label_train = pickle.load(pickled_file)
+        Y_test = pickle.load(pickled_file)
+        label_test = pickle.load(pickled_file)
+        le = pickle.load(pickled_file)
+        rff = pickle.load(pickled_file)
+        return (Y_train, label_train, Y_test, label_test, le, rff)
+
+    feat_list = []
+    label_list = []
+    dataset_path = 'dictol/data/CroppedYale'
+    rff = []
+    for path, dirs, files in os.walk(dataset_path):
+        for file in files:
+            if file.endswith(".pgm") and not file.endswith("_Ambient.pgm"):
+                # Computes feature vectors (RFF) from images
+                # Read image
+                im = (imread(os.path.join(path, file))/255)-0.5
+                im_vec = im.reshape((1, -1))
+                # Computes feature vector
+                if not rff:
+                    rff = rfflearn.RFF(rand_mat_type='rp', dim_kernel=dim_feat)
+                    rff = rff.fit(im_vec)  # Random matrix computation for RFF (on CPU)
+                rffeat = rff.rff_compute(im_vec)  # RRF computation (on CPU)
+                feat_list.append(rffeat)
+
+                # Estimate labels from folder names
+                full_path = os.path.dirname(os.path.join(path, file))
+                label = os.path.normpath(full_path).split(os.path.sep)[-1]
+                label_list.append(label)
+
+    Y = np.asarray(feat_list).squeeze().transpose()
+    # Label enconding
+    le = preprocessing.LabelEncoder()
+    le.fit(label_list)
+    label_int = le.transform(label_list) + 1  # Function label_to_range() requires that labels start by 1 (not 0)
+    # Decoding: le.inverse_transform(label_int)
+
+    d = Y.shape[0]  # Size of feature vectors computed from images.
+    Y_range = np.array(label_to_range(label_int))
+
+    C = Y_range.size - 1
+    N_total = Y_range[-1]
+    N_train = C * N_train_c
+    N_test = N_total - N_train
+
+    Y_train = np.zeros((d, N_train))
+    Y_test = np.zeros((d, N_test))
+    label_train = [0] * N_train
+    label_test = [0] * N_test
+    cur_train = 0
+    cur_test = 0
+    for c in range(C):
+        Yc = get_block_col(Y, c, Y_range)
+        N_total_c = Yc.shape[1]
+        N_test_c = N_total_c - N_train_c
+        label_train[cur_train: cur_train + N_train_c] = [c + 1] * N_train_c
+        label_test[cur_test:cur_test + N_test_c] = [c + 1] * N_test_c
+
+        ids = randperm(N_total_c)
+
+        Y_train[:, cur_train: cur_train + N_train_c] = \
+            Yc[:, np.sort(ids[:N_train_c])]
+
+        Y_test[:, cur_test: cur_test + N_test_c] = \
+            Yc[:, np.sort(ids[N_train_c:])]
+
+        cur_train += N_train_c
+        cur_test += N_test_c
+
+    Y_train = normc(Y_train)
+    Y_test = normc(Y_test)
+    # Save pickle files
+    pickled_file = open(pickle_file, 'wb')
+    pickle.dump(Y_train, pickled_file)
+    pickle.dump(label_train, pickled_file)
+    pickle.dump(Y_test, pickled_file)
+    pickle.dump(label_test, pickled_file)
+    pickle.dump(le, pickled_file)
+    pickle.dump(rff, pickled_file)
+    return (Y_train, label_train, Y_test, label_test, le, rff)
 
 
 def range_reduce(D_range, bad_ids):
     C = D_range.size - 1
     for c in range(C):
-        cumk = D_range[c+1]
+        cumk = D_range[c + 1]
         e = cumk - np.nonzero(bad_ids < cumk)[0].size
-        D_range[c+1] = e
+        D_range[c + 1] = e
 
 
 # range_reduce_test()
@@ -355,7 +453,7 @@ def build_mean_vector(X, Y_range):
     return M = [m1, m2, ..., M_C]
     where mi = mean(X_i)
     """
-    C = Y_range.size -1
+    C = Y_range.size - 1
     M = np.zeros((X.shape[0], C))
     for c in range(C):
         Xc = get_block_col(X, c, Y_range)
@@ -363,9 +461,11 @@ def build_mean_vector(X, Y_range):
     return M
 
 
-def train_test_split(dataset, N_train):
+def train_test_split(dataset, N_train, dim_feat=504):
+    le = []
+    rrf = []
     if dataset == 'myARgender':
-        fn = pkg_resources.resource_filename('dictol', 'data/'+dataset + '.mat') 
+        fn = pkg_resources.resource_filename('dictol', 'data/' + dataset + '.mat')
         # fn = os.path.join('data', 'myARgender.pickle')
         vars_dict = load_mat(fn)
         Y_train = vars_dict['Y_train']
@@ -376,30 +476,30 @@ def train_test_split(dataset, N_train):
         # range_test  = label_to_range(label_test)
 
         new_range_train = N_train * np.arange(N_train + 1)
-        Y_train         = pickDfromY(Y_train, range_train, new_range_train)
-        label_train     = range_to_label(new_range_train)
+        Y_train = pickDfromY(Y_train, range_train, new_range_train)
+        label_train = range_to_label(new_range_train)
 
         Y_train = normc(Y_train)
-        Y_test  = normc(Y_test)
+        Y_test = normc(Y_test)
 
     elif dataset == 'myARreduce':
         fn = os.path.join('data', 'AR_EigenFace.pickle')
         vars_dict = load_mat(fn)
 
-        Y_train     = normc(vars_dict['tr_dat'])
-        Y_test      = normc(vars_dict['tt_dat'])
+        Y_train = normc(vars_dict['tr_dat'])
+        Y_test = normc(vars_dict['tt_dat'])
         label_train = vec(vars_dict['trls']).astype(int)
-        label_test  = vec(vars_dict['ttls']).astype(int)
+        label_test = vec(vars_dict['ttls']).astype(int)
 
     elif dataset == 'myFlower':
         dataset = 'myFlower102'
-        fn      = os.path.join('data', dataset + '.pickle')
-        vars_dict    = load_mat(fn)
+        fn = os.path.join('data', dataset + '.pickle')
+        vars_dict = load_mat(fn)
 
-        Y_train     = vars_dict['Y_train']
-        Y_test      = vars_dict['Y_test']
+        Y_train = vars_dict['Y_train']
+        Y_test = vars_dict['Y_test']
         label_train = vec(vars_dict['label_train'])
-        label_test  = vec(vars_dict['label_test'])
+        label_test = vec(vars_dict['label_test'])
         range_train = label_to_range(label_train)
         num_classes = len(range_train) - 1
         new_range_train = N_train * np.arange(num_classes + 1)
@@ -409,9 +509,13 @@ def train_test_split(dataset, N_train):
         Y_train = normc(Y_train)
         Y_test = normc(Y_test)
 
+    elif dataset == 'CroppedYale':
+        Y_train, label_train, Y_test, label_test, le, rrf = load_CroppedYale_train_test(N_train, dim_feat)
+
     else:
         Y_train, label_train, Y_test, label_test = picl_train_test(dataset, N_train)
-    return (Y_train, Y_test, label_train, label_test)
+
+    return (Y_train, Y_test, label_train, label_test, le, rrf)
 
 
 #################### DLCOPAR #######################
@@ -434,7 +538,7 @@ def buildMhat(M, range_row, range_col):
     C = len(range_row) - 1
     M2 = M.copy()
     for c in range(C):
-        M2[range_row[c]: range_row[c+1], range_col[c]: range_col[c+1]] *= 2
+        M2[range_row[c]: range_row[c + 1], range_col[c]: range_col[c + 1]] *= 2
     return M2
 
 
@@ -447,7 +551,7 @@ def buildM_2Mbar(X, Y_range, lambda2):
     for c in range(C):
         Xc = get_block_col(X, c, Y_range)
         mc = np.mean(Xc, axis=1)
-        MM[:, Y_range[c]: Y_range[c+1]] = repmat(lambda2*(m - 2*mc), 1, Y_range[c+1] - Y_range[c])
+        MM[:, Y_range[c]: Y_range[c + 1]] = repmat(lambda2 * (m - 2 * mc), 1, Y_range[c + 1] - Y_range[c])
     return MM
 
 
@@ -480,7 +584,7 @@ def range_delete_ids(a_range, ids):
     n = a_range.size
     a = np.zeros_like(a_range)
     j = 1
-    while j < n-1:
+    while j < n - 1:
         for i in range(n):
             while a_range[j] < ids[i]:
                 j += 1
@@ -521,7 +625,7 @@ def erase_diagonal_blocks(A, row_range, col_range):
     C = len(row_range) - 1
     B = A.copy()
     for c in range(C):
-        B[row_range[c]: row_range[c+1], col_range[c]: col_range[c+1]] = 0
+        B[row_range[c]: row_range[c + 1], col_range[c]: col_range[c + 1]] = 0
     return B
 
 
@@ -541,8 +645,8 @@ def inv_IpXY(X, Y):
 
 
 def progress_str(cur_val, max_val, total_point=50):
-    p = int(math.ceil(float(cur_val)*total_point / max_val))
-    return '|' + p*'#' + (total_point - p)*'.' + '|'
+    p = int(math.ceil(float(cur_val) * total_point / max_val))
+    return '|' + p * '#' + (total_point - p) * '.' + '|'
 
 
 def get_time_str():
