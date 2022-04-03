@@ -1,5 +1,9 @@
+# Modified DICTOL library for developing the laboratory session of “Unit 5 Object detection & recognition with sparse dictionaries”.
+See "LabDictionaryLearning.pdf" in Moodle for instructions.
 
-# DICTOL - A Discriminative dictionary Learning Toolbox for Classification (support both Python 2 and 3).
+# Original instructions from DICTOL (you can skip them)
+
+## DICTOL - A Discriminative dictionary Learning Toolbox for Classification (support both Python 2 and 3).
 _This repo is a part of our [LRSDL project](http://signal.ee.psu.edu/lrsdl.html)._
 
 **Related publications:**
@@ -16,19 +20,19 @@ If you experience any bugs, please let me know via the [**Issues**](https://gith
 
 For more information, please see its corresponding [**MATLAB version**](https://github.com/tiepvupsu/DICTOL).
 
-# Requirements
+## Requirements
 ```
 numpy==1.17.4
 scipy==1.4.1
 ```
 
-# Installation
+## Installation
 ```
 git clone https://github.com/tiepvupsu/DICTOL_python
 cd DICTOL_python
 ```
  
-# Testing
+## Testing
 
 Inside python:
 ```
