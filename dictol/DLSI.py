@@ -100,7 +100,18 @@ class DLSI(base.BaseModel):
             lasso.fit(Y, iterations=iterations)
             Xc = lasso.coef_
             if mean_spars:
-                sparsity[c, :] = np.sum(np.abs(Xc) >= 1 / (self.D.shape[1] / self.num_classes), axis=0)
+                # Mean sparsity using a the accumulated energy
+                threshold = 0.9  # 90% of the energy
+                sorted_desc = -np.sort(-np.abs(Xc), axis=0)
+                cs = np.cumsum(sorted_desc, axis=0)
+                cs_bin = cs / cs[-1, :] > threshold
+                sparse_level = np.zeros((1, cs_bin.shape[1]))
+                for i in range(cs_bin.shape[1]):
+                    sparse_level[0, i] = np.where(cs_bin[:, i])[0][0]
+                sparsity[c, :] = sparse_level
+
+                # Mean sparsity using a threshold
+                #sparsity[c, :] = np.sum(np.abs(Xc) >= 1 / (self.D.shape[1] / self.num_classes), axis=0)
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)
 
@@ -108,7 +119,7 @@ class DLSI(base.BaseModel):
             i_min = np.argmin(E, axis=0)
             mean_sparsity = np.mean(sparsity[i_min, :])
             std_sparsity = np.std(sparsity[i_min, :])
-            print(f'Mean sparsity: {mean_sparsity}')
+            print(f'Mean sparsity: {mean_sparsity} out of {self.D.shape[1]}')
             print(f'Std sparsity: {std_sparsity}')
         return np.argmin(E, axis=0) + 1
 

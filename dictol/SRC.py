@@ -23,9 +23,22 @@ class SRC(base.BaseModel):
         lasso.fit(Y, iterations=iterations)  # X = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         X = lasso.coef_
         if mean_spars:
+            # Mean sparsity using a the accumulated energy
+            threshold = 0.9  # 90% of the energy
+            sorted_desc = -np.sort(-np.abs(X), axis=0)
+            cs = np.cumsum(sorted_desc, axis=0)
+            cs_bin = cs/cs[-1,:] > threshold
+            sparse_level = np.zeros((1,cs_bin.shape[1]))
+            for i in range(cs_bin.shape[1]):
+                sparse_level[0,i] = np.where(cs_bin[:,i])[0][0]
+            mean_sparsity = np.mean(sparse_level)
+            std_sparsity = np.std(sparse_level)
+            # Mean sparsity using a threshold
+            '''
             mean_sparsity = np.mean(np.sum(np.abs(X) >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
             std_sparsity = np.std(np.sum(np.abs(X) >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
-            print(f'Mean sparsity: {mean_sparsity}')
+            '''
+            print(f'Mean sparsity: {mean_sparsity} out of {self.D.shape[1]}')
             print(f'Std sparsity: {std_sparsity}')
         E = np.zeros((self.num_classes, Y.shape[1]))
         for i in range(self.num_classes):
