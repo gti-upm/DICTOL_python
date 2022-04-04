@@ -23,8 +23,8 @@ class SRC(base.BaseModel):
         lasso.fit(Y, iterations=iterations)  # X = arg min_X 0.5*||Y - DX||_F^2 + lambd||X||_1
         X = lasso.coef_
         if mean_spars:
-            mean_sparsity = np.mean(np.sum(X >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
-            std_sparsity = np.std(np.sum(X >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
+            mean_sparsity = np.mean(np.sum(np.abs(X) >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
+            std_sparsity = np.std(np.sum(np.abs(X) >= 1 / (self.D.shape[1]/self.num_classes), axis=0))
             print(f'Mean sparsity: {mean_sparsity}')
             print(f'Std sparsity: {std_sparsity}')
         E = np.zeros((self.num_classes, Y.shape[1]))

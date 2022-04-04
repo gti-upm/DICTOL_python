@@ -100,13 +100,14 @@ class DLSI(base.BaseModel):
             lasso.fit(Y, iterations=iterations)
             Xc = lasso.coef_
             if mean_spars:
-                sparsity[c, :] = np.sum(Xc >= 1 / (self.D.shape[1] / self.num_classes), axis=0)
+                sparsity[c, :] = np.sum(np.abs(Xc) >= 1 / (self.D.shape[1] / self.num_classes), axis=0)
             R1 = Y - np.dot(Dc, Xc)
             E[c, :] = 0.5*(R1*R1).sum(axis=0) + self.lambd*abs(Xc).sum(axis=0)
 
         if mean_spars:
-            mean_sparsity = np.mean(np.sum(sparsity, axis=0))
-            std_sparsity = np.std(np.sum(sparsity, axis=0))
+            i_min = np.argmin(E, axis=0)
+            mean_sparsity = np.mean(sparsity[i_min, :])
+            std_sparsity = np.std(sparsity[i_min, :])
             print(f'Mean sparsity: {mean_sparsity}')
             print(f'Std sparsity: {std_sparsity}')
         return np.argmin(E, axis=0) + 1
