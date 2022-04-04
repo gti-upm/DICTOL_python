@@ -30,7 +30,10 @@ class SRC(base.BaseModel):
             cs_bin = cs/cs[-1,:] > threshold
             sparse_level = np.zeros((1,cs_bin.shape[1]))
             for i in range(cs_bin.shape[1]):
-                sparse_level[0,i] = np.where(cs_bin[:,i])[0][0]
+                if not cs_bin[:, i].any():
+                    sparse_level[0, i] = 0
+                else:
+                    sparse_level[0,i] = np.where(cs_bin[:,i])[0][0]
             mean_sparsity = np.mean(sparse_level)
             std_sparsity = np.std(sparse_level)
             # Mean sparsity using a threshold

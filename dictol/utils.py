@@ -25,7 +25,8 @@ def vec(A):
     * Vectorization of a matrix. This function is a built-in function in some
     recent MATLAB version.
     """
-    return A.flatten(1)
+    #return A.flatten(1)
+    return A.flatten('C')
 
 
 def label_to_range(label):
