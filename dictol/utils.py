@@ -365,10 +365,12 @@ def load_CroppedYale_train_test(N_train_c, dim_feat=504, precomputed=False):
 
     feat_list = []
     label_list = []
-    dataset_path = 'dictol/data/CroppedYale'
+    dataset_path = os.path.abspath('dictol/data/CroppedYale')
     rff = []
     for path, dirs, files in os.walk(dataset_path):
-        for file in files:
+        # In Linux and Mac, os.walk() returns an unordered list of files and directories
+        dirs.sort()
+        for file in sorted(files):
             if file.endswith(".pgm") and not file.endswith("_Ambient.pgm"):
                 # Computes feature vectors (RFF) from images
                 # Read image
@@ -382,7 +384,7 @@ def load_CroppedYale_train_test(N_train_c, dim_feat=504, precomputed=False):
                 feat_list.append(rffeat)
 
                 # Estimate labels from folder names
-                full_path = os.path.dirname(os.path.join(path, file))
+                full_path = os.path.dirname(os.path.abspath(os.path.join(path, file)))
                 label = os.path.normpath(full_path).split(os.path.sep)[-1]
                 label_list.append(label)
 
