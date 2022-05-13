@@ -9,7 +9,7 @@ import pkg_resources
 from skimage.io import imread
 from skimage import io
 from matplotlib import pyplot as plt
-import rff.rfflearn.cpu as rfflearn
+#import rff.rfflearn.cpu as rfflearn
 from sklearn import preprocessing
 import pickle
 
@@ -378,7 +378,7 @@ def load_CroppedYale_train_test(N_train_c, dim_feat=504, precomputed=False):
                 im_vec = im.reshape((1, -1))
                 # Computes feature vector
                 if not rff:
-                    rff = rfflearn.RFF(rand_mat_type='rp', dim_kernel=dim_feat)
+                    rff = rff.rfflearn.cpu.RFF(rand_mat_type='rp', dim_kernel=dim_feat)
                     rff = rff.fit(im_vec)  # Random matrix computation for RFF (on CPU)
                 rffeat = rff.rff_compute(im_vec)  # RRF computation (on CPU)
                 feat_list.append(rffeat)

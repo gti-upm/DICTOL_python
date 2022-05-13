@@ -11,4 +11,5 @@ build/
 main.py
 /venv
 /dictol/data/CroppedYale/
+/dictol/data/Hand Gesture Recognition Database/
 /.idea
